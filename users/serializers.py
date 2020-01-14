@@ -3,38 +3,29 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
-        exclude = (
-            "user_permissions",
+        fields = (
+            "id",
+            "username",
             "password",
-            "groups",
-            "date_joined",
-            "is_active",
-            "last_login",
-            "is_superuser",
-            "favs",
+            "first_name",
+            "last_name",
+            "email",
+            "avatar",
+            "superhost",
+        )
+        read_only_fields = (
+            "id",
+            "superhost",
+            "avatar",
         )
 
-
-class ReadUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        exclude = (
-            "user_permissions",
-            "password",
-            "groups",
-            "date_joined",
-            "is_active",
-            "last_login",
-            "is_superuser",
-        )
-
-
-class WriteUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("first_name", "email")
-
-    def validate_first_name(self, value):
-        return value.upper()
+    def create(self, validated_data):
+        password = validated_data.get("password")
+        user = super().create(validated_data)
+        user.set_password(password)
+        user.save()
+        return user
